@@ -225,6 +225,20 @@ class ListingRepository:
         )
         return list(result.scalars().all())
 
+    async def first_keyword_for_listing(self, listing_id: int) -> Keyword | None:
+        """The keyword that originally matched this listing — used to
+        rebuild a Discord embed payload for a notification resumed after a
+        restart/crash (spec section 35), where the original in-memory
+        context is long gone."""
+        result = await self.session.execute(
+            select(Keyword)
+            .join(ListingKeyword, ListingKeyword.keyword_id == Keyword.id)
+            .where(ListingKeyword.listing_id == listing_id)
+            .order_by(ListingKeyword.first_detected_at.asc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def list_paginated(
         self,
         filters: ListingFilter,

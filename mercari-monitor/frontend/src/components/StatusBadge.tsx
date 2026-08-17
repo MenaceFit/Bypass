@@ -2,6 +2,7 @@ const STATUS_STYLES: Record<string, { color: string; label: string }> = {
   ACTIVE: { color: "var(--color-online)", label: "ACTIVE" },
   ONLINE: { color: "var(--color-online)", label: "ONLINE" },
   PAUSED: { color: "var(--color-text-dim)", label: "PAUSED" },
+  NOT_CONFIGURED: { color: "var(--color-text-dim)", label: "NOT CONFIGURED" },
   THROTTLED: { color: "var(--color-warning)", label: "THROTTLED" },
   DEGRADED: { color: "var(--color-degraded)", label: "DEGRADED" },
   BACKOFF: { color: "var(--color-degraded)", label: "BACKOFF" },

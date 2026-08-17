@@ -61,6 +61,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         "Discord           %s",
         "configured" if settings.has_discord else "not configured (set DISCORD_WEBHOOK_URL in .env)",
     )
+    await notification_service.requeue_pending()
 
     await monitoring_service.start()
     logger.info("Workers           %d active", monitoring_service.active_worker_count())

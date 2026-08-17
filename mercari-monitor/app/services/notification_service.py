@@ -19,10 +19,11 @@ from dataclasses import dataclass
 from app.config.defaults import DISCORD_MAX_ATTEMPTS
 from app.config.settings import settings
 from app.database.database import session_scope
-from app.database.repositories import NotificationRepository
+from app.database.models import NotificationStatus
+from app.database.repositories import ListingRepository, NotificationRepository
 from app.events.bus import Event, EventType, event_bus
 from app.notifications.discord import DiscordDeliveryError, send_new_listing_embed, send_test_embed
-from app.services.listing_service import ListingEventPayload
+from app.services.listing_service import ListingEventPayload, build_listing_event_payload
 from app.utils.logger import get_logger
 from app.utils.retry import compute_backoff_delay
 
@@ -45,6 +46,39 @@ class NotificationService:
             self._worker_task = asyncio.create_task(self._worker_loop())
         event_bus.subscribe(EventType.DISCORD_NOTIFICATION_REQUIRED, self._on_notification_required)
         logger.info("Discord notification worker started")
+
+    async def requeue_pending(self) -> int:
+        """Called once at startup: any notification left `PENDING` (or
+        `FAILED` but not yet at its attempt limit) from a previous run —
+        most notably one that crashed mid-delivery — gets a chance to send
+        again instead of sitting forgotten in the database (spec section
+        35: "Les notifications Discord non envoyées peuvent être
+        reprises"). The original in-process event payload is long gone, so
+        this rebuilds it from the listing + the keyword that first matched
+        it.
+        """
+        requeued = 0
+        async with session_scope() as session:
+            notification_repo = NotificationRepository(session)
+            listing_repo = ListingRepository(session)
+
+            for notification in await notification_repo.get_pending_or_failed(limit=500):
+                if notification.status == NotificationStatus.FAILED.value:
+                    continue  # already exhausted its attempts — leave it as a record, don't resurrect it
+
+                listing = await listing_repo.get(notification.listing_id)
+                keyword = await listing_repo.first_keyword_for_listing(notification.listing_id) if listing else None
+                if listing is None or keyword is None:
+                    continue
+
+                matched = await listing_repo.keywords_for_listing(listing.id)
+                payload = build_listing_event_payload(listing, keyword, matched)
+                await self._queue.put(QueuedNotification(notification_id=notification.id, payload=payload))
+                requeued += 1
+
+        if requeued:
+            logger.info("Resumed %d pending Discord notification(s) from a previous run", requeued)
+        return requeued
 
     async def stop(self) -> None:
         if self._worker_task is None:

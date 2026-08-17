@@ -84,7 +84,7 @@ export function Dashboard() {
             <StatusRow label="Mercari source" status={systemStatus?.source_available === false ? systemStatus.source_status : "ONLINE"} />
             <StatusRow label="Database" status={health?.database ? "ONLINE" : "ERROR"} />
             <StatusRow label="WebSocket" status={health?.websocket ? "ONLINE" : "ERROR"} />
-            <StatusRow label="Discord" status={health?.discord ? "ONLINE" : "PAUSED"} />
+            <StatusRow label="Discord" status={health?.discord ? "ONLINE" : "NOT_CONFIGURED"} />
           </div>
           {systemStatus?.source_reason && (
             <p className="mt-3 text-xs text-[var(--color-warning)]">Reason: {systemStatus.source_reason}</p>
