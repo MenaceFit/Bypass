@@ -1,0 +1,41 @@
+{
+  "_fixture_note": "Hand-built, representative of Mercari's search API response shape per public research (see README -> Architecture). NOT captured from a live request. Used to pin parser behavior and to catch structural drift if the real site is later confirmed to differ.",
+  "meta": {
+    "numFound": 3,
+    "offset": 0,
+    "hasMore": false
+  },
+  "data": [
+    {
+      "id": "m12345678901",
+      "name": "Nike ACG Jacket - Size M - Excellent Condition",
+      "description": "Worn twice, no flaws. Smoke free home.",
+      "price": 120,
+      "currency": "USD",
+      "brand": { "id": "b1", "name": "Nike" },
+      "category": { "id": "c1", "name": "Men's Jackets" },
+      "size": { "id": "s1", "name": "M" },
+      "condition": "Good",
+      "status": "for_sale",
+      "seller": { "id": "u123", "username": "gearhead_99" },
+      "photos": ["https://static.mercdn.net/item/photo1.jpg"],
+      "url": "https://www.mercari.com/item/m12345678901/",
+      "created": 1755417161
+    },
+    {
+      "id": "m22222222222",
+      "name": "Nike ACG Cargo Pants",
+      "price": "$85.00",
+      "brand": { "name": "Nike" },
+      "size": { "name": "L" },
+      "seller": { "username": "resell_king" },
+      "url": "https://www.mercari.com/item/m22222222222/",
+      "created": 1755417000
+    },
+    {
+      "id": "m33333333333",
+      "name": "Nike ACG Beanie (no photo, minimal fields)"
+    }
+  ],
+  "facets": {}
+}

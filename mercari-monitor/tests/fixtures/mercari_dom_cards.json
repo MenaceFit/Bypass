@@ -1,0 +1,23 @@
+{
+  "_fixture_note": "Representative of the DOM-fallback extraction shape produced by client.py's _extract_dom_cards() when no search-API response is intercepted. Hand-built, not captured live.",
+  "cards": [
+    {
+      "href": "/item/m44444444444/",
+      "title": "Nike ACG Trail Running Shoes",
+      "image_url": "https://static.mercdn.net/item/photo2.jpg",
+      "price_text": "$95"
+    },
+    {
+      "href": "https://www.mercari.com/item/m55555555555/",
+      "title": null,
+      "image_url": null,
+      "price_text": "USD 40.50"
+    },
+    {
+      "href": "/us/profile/12345/",
+      "title": "Not an item link, should be skipped",
+      "image_url": null,
+      "price_text": null
+    }
+  ]
+}
