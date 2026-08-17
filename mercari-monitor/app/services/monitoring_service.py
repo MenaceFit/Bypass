@@ -24,6 +24,7 @@ from app.config.settings import settings
 from app.database.database import session_scope
 from app.database.models import Keyword, KeywordStatus, Listing
 from app.database.repositories import (
+    AppSettingRepository,
     KeywordRepository,
     ListingRepository,
     NotificationRepository,
@@ -184,7 +185,8 @@ class MonitoringService:
             return 0, 0, ScanOutcome(success=False, error_message=str(exc)), str(exc)
 
         detection = await self._persist_results(keyword, normalized_listings)
-        should_notify = not (is_first_scan and settings.first_run_mode == "import_silent")
+        first_run_mode = await _get_first_run_mode()
+        should_notify = not (is_first_scan and first_run_mode == "import_silent")
         for listing, normalized in detection.new_listings:
             await self._handle_new_listing(keyword, listing, normalized, notify=should_notify)
 
@@ -327,3 +329,12 @@ def _seconds_until(target: datetime | None) -> float:
     if target is None:
         return 0.0
     return max(0.0, (target - utc_now()).total_seconds())
+
+
+async def _get_first_run_mode() -> str:
+    """The UI (spec section 33's first-run dialog) can override this at
+    runtime via PUT /api/settings; `settings.first_run_mode` (.env) is only
+    the default until it does."""
+    async with session_scope() as session:
+        stored = await AppSettingRepository(session).get("first_run_mode")
+    return stored or settings.first_run_mode

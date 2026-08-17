@@ -488,6 +488,10 @@ async def get_settings_endpoint() -> SettingsResponse:
 async def update_settings_endpoint(body: SettingsUpdateRequest) -> SettingsResponse:
     if body.theme is not None and body.theme not in ("dark", "light"):
         raise HTTPException(status_code=422, detail="theme must be 'dark' or 'light'.")
+    if body.first_run_mode is not None and body.first_run_mode not in ("import_silent", "treat_as_new"):
+        raise HTTPException(
+            status_code=422, detail="first_run_mode must be 'import_silent' or 'treat_as_new'."
+        )
     async with session_scope() as session:
         repo = AppSettingRepository(session)
         if body.theme is not None:
@@ -501,6 +505,8 @@ async def update_settings_endpoint(body: SettingsUpdateRequest) -> SettingsRespo
                 "desktop_notifications_enabled",
                 "true" if body.desktop_notifications_enabled else "false",
             )
+        if body.first_run_mode is not None:
+            await repo.set("first_run_mode", body.first_run_mode)
         stored = await repo.get_all()
     return _settings_response(stored)
 
@@ -520,7 +526,7 @@ def _settings_response(stored: dict[str, str]) -> SettingsResponse:
         log_level=settings.log_level,
         database_url=settings.database_url,
         archive_after_days=settings.archive_after_days,
-        first_run_mode=settings.first_run_mode,
+        first_run_mode=stored.get("first_run_mode", settings.first_run_mode),
         theme=stored.get("theme", "dark"),
         sound_notifications_enabled=stored.get("sound_notifications_enabled") == "true",
         desktop_notifications_enabled=stored.get("desktop_notifications_enabled") == "true",

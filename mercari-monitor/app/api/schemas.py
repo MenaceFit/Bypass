@@ -207,6 +207,7 @@ class SettingsUpdateRequest(BaseModel):
     theme: str | None = None
     sound_notifications_enabled: bool | None = None
     desktop_notifications_enabled: bool | None = None
+    first_run_mode: str | None = None
 
 
 class HealthResponse(BaseModel):
