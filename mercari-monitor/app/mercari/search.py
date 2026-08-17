@@ -20,7 +20,12 @@ from urllib.parse import urlencode
 
 from app.mercari.client import MercariClient, MercariFetchResult, MercariFetchStatus, SourceHealth
 from app.mercari.normalizer import NormalizedListing, normalize_listing
-from app.mercari.parser import ParserError, RawListing, parse_listing_card_dom, parse_search_api_payload
+from app.mercari.parser import (
+    ParserError,
+    RawListing,
+    parse_listing_card_dom,
+    parse_search_api_payload,
+)
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)

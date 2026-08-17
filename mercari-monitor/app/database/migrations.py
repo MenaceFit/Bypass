@@ -16,7 +16,6 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from app.database.models import Base
@@ -56,7 +55,7 @@ async def _applied_versions(conn: AsyncConnection) -> set[int]:
     return {row[0] for row in result.fetchall()}
 
 
-async def run_migrations(engine: AsyncEngine | Engine) -> None:
+async def run_migrations(engine: AsyncEngine) -> None:
     async with engine.begin() as conn:
         await _ensure_migrations_table(conn)
         applied = await _applied_versions(conn)

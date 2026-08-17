@@ -7,14 +7,14 @@ the presentation boundary (API serialization / frontend), never internally.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 from app.config.settings import settings
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def to_utc(dt: datetime) -> datetime:
@@ -25,8 +25,8 @@ def to_utc(dt: datetime) -> datetime:
     timezone is genuinely unknown.
     """
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        return dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def to_display_timezone(dt: datetime) -> datetime:

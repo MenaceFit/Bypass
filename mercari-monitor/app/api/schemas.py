@@ -60,7 +60,7 @@ class KeywordResponse(BaseModel):
     total_listings: int = 0
 
     @classmethod
-    def from_model(cls, keyword: Keyword, *, new_today: int = 0, total_listings: int = 0) -> "KeywordResponse":
+    def from_model(cls, keyword: Keyword, *, new_today: int = 0, total_listings: int = 0) -> KeywordResponse:
         return cls(
             id=keyword.id,
             keyword=keyword.keyword,
@@ -119,7 +119,7 @@ class ListingResponse(BaseModel):
     @classmethod
     def from_model(
         cls, listing: Listing, *, matched_keywords: list[str], discord_status: str | None
-    ) -> "ListingResponse":
+    ) -> ListingResponse:
         return cls(
             id=listing.id,
             external_id=listing.external_id,

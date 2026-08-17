@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import random
 from collections.abc import Awaitable, Callable
-from typing import TypeVar
 
 from tenacity import (
     AsyncRetrying,
@@ -31,8 +30,6 @@ from app.config.settings import settings
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-T = TypeVar("T")
 
 
 class RetryableError(Exception):
@@ -85,7 +82,7 @@ def _log_retry(retry_state: RetryCallState) -> None:
     )
 
 
-async def retry_async(
+async def retry_async[T](
     func: Callable[[], Awaitable[T]],
     *,
     max_attempts: int | None = None,

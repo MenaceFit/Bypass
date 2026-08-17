@@ -10,7 +10,7 @@ always timezone-aware and safe to use in arithmetic against `utc_now()`.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from sqlalchemy import (
@@ -51,13 +51,13 @@ class UTCDateTime(TypeDecorator):
         if value is None:
             return None
         if value.tzinfo is not None:
-            value = value.astimezone(timezone.utc).replace(tzinfo=None)
+            value = value.astimezone(UTC).replace(tzinfo=None)
         return value
 
     def process_result_value(self, value: datetime | None, dialect: Dialect) -> datetime | None:
         if value is None:
             return None
-        return value.replace(tzinfo=timezone.utc)
+        return value.replace(tzinfo=UTC)
 
 
 class Base(DeclarativeBase):
@@ -130,10 +130,10 @@ class Keyword(Base):
         UTCDateTime(), default=utc_now, onupdate=utc_now, nullable=False
     )
 
-    listing_links: Mapped[list["ListingKeyword"]] = relationship(
+    listing_links: Mapped[list[ListingKeyword]] = relationship(
         back_populates="keyword", cascade="all, delete-orphan"
     )
-    scan_runs: Mapped[list["ScanRun"]] = relationship(
+    scan_runs: Mapped[list[ScanRun]] = relationship(
         back_populates="keyword", cascade="all, delete-orphan"
     )
 
@@ -190,10 +190,10 @@ class Listing(Base):
         UTCDateTime(), default=utc_now, onupdate=utc_now, nullable=False
     )
 
-    keyword_links: Mapped[list["ListingKeyword"]] = relationship(
+    keyword_links: Mapped[list[ListingKeyword]] = relationship(
         back_populates="listing", cascade="all, delete-orphan"
     )
-    notifications: Mapped[list["Notification"]] = relationship(
+    notifications: Mapped[list[Notification]] = relationship(
         back_populates="listing", cascade="all, delete-orphan"
     )
 
@@ -222,8 +222,8 @@ class ListingKeyword(Base):
         UTCDateTime(), default=utc_now, nullable=False
     )
 
-    listing: Mapped["Listing"] = relationship(back_populates="keyword_links")
-    keyword: Mapped["Keyword"] = relationship(back_populates="listing_links")
+    listing: Mapped[Listing] = relationship(back_populates="keyword_links")
+    keyword: Mapped[Keyword] = relationship(back_populates="listing_links")
 
     __table_args__ = (Index("ix_listing_keywords_keyword_id", "keyword_id"),)
 
@@ -247,7 +247,7 @@ class Notification(Base):
         UTCDateTime(), default=utc_now, nullable=False
     )
 
-    listing: Mapped["Listing"] = relationship(back_populates="notifications")
+    listing: Mapped[Listing] = relationship(back_populates="notifications")
 
     __table_args__ = (Index("ix_notifications_status", "status"),)
 
@@ -267,7 +267,7 @@ class ScanRun(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    keyword: Mapped["Keyword"] = relationship(back_populates="scan_runs")
+    keyword: Mapped[Keyword] = relationship(back_populates="scan_runs")
 
     __table_args__ = (
         Index("ix_scan_runs_keyword_id_started_at", "keyword_id", "started_at"),

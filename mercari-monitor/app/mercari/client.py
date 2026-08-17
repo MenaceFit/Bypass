@@ -40,8 +40,10 @@ from playwright.async_api import (
     Page,
     Playwright,
     Response,
-    TimeoutError as PlaywrightTimeoutError,
     async_playwright,
+)
+from playwright.async_api import (
+    TimeoutError as PlaywrightTimeoutError,
 )
 
 from app.config.settings import settings

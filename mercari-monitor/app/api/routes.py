@@ -21,11 +21,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.defaults import DEFAULT_PAGE_SIZE
 from app.config.settings import settings
 from app.database.database import session_scope
-from app.database.models import Keyword, Listing, ListingKeyword, Notification, NotificationStatus, ScanRun
+from app.database.models import (
+    Keyword,
+    Listing,
+    ListingKeyword,
+    Notification,
+    NotificationStatus,
+    ScanRun,
+)
 from app.database.repositories import (
     AppSettingRepository,
     KeywordRepository,
@@ -94,6 +102,17 @@ def _to_keyword_input(body: KeywordWriteRequest) -> KeywordInput:
         include_keywords=body.include_keywords,
         exclude_keywords=body.exclude_keywords,
     )
+
+
+async def _require_keyword(session: AsyncSession, keyword_id: int) -> Keyword:
+    """Re-fetch a keyword we just wrote and expect to still be there. A
+    None here would mean it was deleted by a concurrent request in the gap
+    between the write and this read — surfaced as 404 rather than a raw
+    AttributeError, and narrows the type for mypy."""
+    keyword = await KeywordRepository(session).get(keyword_id)
+    if keyword is None:
+        raise HTTPException(status_code=404, detail="Search not found.")
+    return keyword
 
 
 def _start_of_today() -> datetime:
@@ -183,17 +202,16 @@ async def import_searches(
         await monitoring.sync_keyword(keyword_id)
 
     async with session_scope() as session:
-        keyword_repo = KeywordRepository(session)
-        return [KeywordResponse.from_model(await keyword_repo.get(kid)) for kid in created_ids]
+        return [
+            KeywordResponse.from_model(await _require_keyword(session, kid)) for kid in created_ids
+        ]
 
 
 @router.get("/searches/{search_id}", response_model=KeywordResponse)
 async def get_search(search_id: int) -> KeywordResponse:
     today_start = _start_of_today()
     async with session_scope() as session:
-        keyword = await KeywordRepository(session).get(search_id)
-        if keyword is None:
-            raise HTTPException(status_code=404, detail="Search not found.")
+        keyword = await _require_keyword(session, search_id)
         link_repo = ListingKeywordRepository(session)
         new_today = await link_repo.link_count_for_keyword_since(search_id, today_start)
         total = await link_repo.link_count_for_keyword(search_id)
@@ -207,7 +225,7 @@ async def create_search(body: KeywordWriteRequest, monitoring: MonitoringService
         keyword_id = keyword.id
     await monitoring.sync_keyword(keyword_id)
     async with session_scope() as session:
-        return KeywordResponse.from_model(await KeywordRepository(session).get(keyword_id))
+        return KeywordResponse.from_model(await _require_keyword(session, keyword_id))
 
 
 @router.put("/searches/{search_id}", response_model=KeywordResponse)
@@ -222,7 +240,7 @@ async def update_search(
             raise HTTPException(status_code=404, detail="Search not found.")
     await monitoring.sync_keyword(search_id)
     async with session_scope() as session:
-        return KeywordResponse.from_model(await KeywordRepository(session).get(search_id))
+        return KeywordResponse.from_model(await _require_keyword(session, search_id))
 
 
 @router.delete("/searches/{search_id}", response_model=MessageResponse)

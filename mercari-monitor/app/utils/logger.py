@@ -14,8 +14,8 @@ import re
 import sys
 import threading
 from collections import deque
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 from app.config.settings import settings
@@ -56,7 +56,7 @@ class RingBufferHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         entry = LogRecordEntry(
-            timestamp=datetime.fromtimestamp(record.created, tz=timezone.utc),
+            timestamp=datetime.fromtimestamp(record.created, tz=UTC),
             level=record.levelname,
             logger=record.name,
             message=redact(record.getMessage()),

@@ -86,7 +86,7 @@ class RateLimiter:
     def release(self) -> None:
         self._semaphore.release()
 
-    def __call__(self) -> "_RateLimiterContext":
+    def __call__(self) -> _RateLimiterContext:
         return _RateLimiterContext(self)
 
 

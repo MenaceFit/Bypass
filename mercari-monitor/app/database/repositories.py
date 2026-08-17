@@ -14,7 +14,6 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Generic, TypeVar
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -24,6 +23,7 @@ from app.config.defaults import DEFAULT_PAGE_SIZE
 from app.database.models import (
     AppSetting,
     Keyword,
+    KeywordStatus,
     Listing,
     ListingKeyword,
     Notification,
@@ -33,11 +33,9 @@ from app.database.models import (
 from app.utils.time import utc_now
 from app.utils.validation import clamp_page_size
 
-T = TypeVar("T")
-
 
 @dataclass
-class Page(Generic[T]):
+class Page[T]:
     items: list[T]
     total: int
     page: int
@@ -122,8 +120,6 @@ class KeywordRepository:
         return True
 
     async def set_active(self, keyword_id: int, active: bool) -> Keyword | None:
-        from app.database.models import KeywordStatus
-
         keyword = await self.get(keyword_id)
         if keyword is None:
             return None
@@ -200,6 +196,7 @@ class ListingRepository:
 
         if is_new:
             listing = await self.session.get(Listing, inserted_id)
+            assert listing is not None, "just-inserted row must be visible within the same transaction"
         else:
             existing = await self.session.execute(
                 select(Listing).where(Listing.external_id == values["external_id"])

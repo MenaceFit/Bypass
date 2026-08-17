@@ -13,6 +13,7 @@ or failing webhook can never block scraping or DB writes (spec section
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 
 from app.config.defaults import DISCORD_MAX_ATTEMPTS
@@ -49,10 +50,8 @@ class NotificationService:
         if self._worker_task is None:
             return
         self._worker_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await self._worker_task
-        except asyncio.CancelledError:
-            pass
         self._worker_task = None
 
     async def _on_notification_required(self, event: Event) -> None:
@@ -76,14 +75,15 @@ class NotificationService:
                 self._queue.task_done()
 
     async def _deliver(self, item: QueuedNotification) -> None:
-        if not settings.has_discord:
+        webhook_url = settings.discord_webhook_url
+        if not webhook_url:
             await self._mark_failed(item.notification_id, "Discord webhook not configured", final=True)
             return
 
         attempts = await self._mark_attempt(item.notification_id)
 
         try:
-            await send_new_listing_embed(item.payload, webhook_url=settings.discord_webhook_url)
+            await send_new_listing_embed(item.payload, webhook_url=webhook_url)
         except DiscordDeliveryError as exc:
             await self._handle_delivery_failure(item, attempts, str(exc))
             return
@@ -124,9 +124,10 @@ class NotificationService:
     async def send_test_message(self) -> None:
         """Backs `POST /api/discord/test` — bypasses the queue/DB entirely,
         a direct synchronous send so the UI gets an immediate result."""
-        if not settings.has_discord:
+        webhook_url = settings.discord_webhook_url
+        if not webhook_url:
             raise DiscordDeliveryError("No Discord webhook is configured.")
-        await send_test_embed(webhook_url=settings.discord_webhook_url)
+        await send_test_embed(webhook_url=webhook_url)
 
 
 notification_service = NotificationService()

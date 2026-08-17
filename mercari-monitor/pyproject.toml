@@ -9,7 +9,11 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = ["E501"]
+# E501: line length isn't worth fighting for a handful of long f-strings.
+# SIM103: rejected deliberately in validation-style functions (price/keyword
+# filters) where parallel `if cond: return False` guard clauses read more
+# clearly than collapsing the last one into `return not (...)`.
+ignore = ["E501", "SIM103"]
 
 [tool.mypy]
 python_version = "3.12"

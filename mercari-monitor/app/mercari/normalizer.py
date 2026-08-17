@@ -14,8 +14,7 @@ Two normalization rules matter enough to call out explicitly:
 from __future__ import annotations
 
 import re
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel
 
@@ -91,7 +90,7 @@ def normalize_timestamp(raw: str | int | float | None) -> datetime | None:
             # seconds. Anything else is too ambiguous to trust.
             if value > 10**12:
                 value /= 1000
-            dt = datetime.fromtimestamp(value, tz=timezone.utc)
+            dt = datetime.fromtimestamp(value, tz=UTC)
         elif isinstance(raw, str):
             text = raw.strip()
             if not text:

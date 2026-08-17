@@ -18,11 +18,12 @@ limiter decides how many requests may actually be in flight at once.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from datetime import datetime
 
 from app.config.settings import settings
 from app.database.database import session_scope
-from app.database.models import Keyword, KeywordStatus, Listing
+from app.database.models import Keyword, Listing
 from app.database.repositories import (
     AppSettingRepository,
     KeywordRepository,
@@ -61,10 +62,8 @@ class MonitoringService:
         for task in list(self._tasks.values()):
             task.cancel()
         for task in list(self._tasks.values()):
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await task
-            except asyncio.CancelledError:
-                pass
         self._tasks.clear()
         logger.info("Monitoring service stopped")
 

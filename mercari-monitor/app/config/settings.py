@@ -76,12 +76,12 @@ class Settings(BaseSettings):
     # --- First run -------------------------------------------------------------
     first_run_mode: Literal["import_silent", "treat_as_new"] = "import_silent"
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def data_dir(self) -> Path:
         return BASE_DIR / "data"
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def frontend_dist_dir(self) -> Path:
         return BASE_DIR / "frontend" / "dist"
